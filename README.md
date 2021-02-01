@@ -39,7 +39,7 @@ $ cargo run --bin node_bi
 ```
 
 
-# node_uni_alt
+### node_uni_alt
 
 note: This code will error out immediately due to [issue 205](https://github.com/maidsafe/qp2p/issues/205).
 
