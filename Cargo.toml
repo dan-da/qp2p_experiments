@@ -1,0 +1,40 @@
+[package]
+name = "qp2p_experiments"
+version = "0.0.1"
+description = "experiments with qp2p lib"
+authors = [ "danda <dan-da@users.noreply.github.com>" ]
+license = "MIT OR BSD-3-Clause"
+repository = "https://g0.8.2.com/maidsafe/qp2p_experiments"
+edition = "2018"
+publish = false
+
+
+[[bin]]
+name = "node_uni"
+path = "src/node_uni.rs"
+
+[[bin]]
+name = "node_uni_alt"
+path = "src/node_uni_alt.rs"
+
+[[bin]]
+name = "node_bi"
+path = "src/node_bi.rs"
+
+
+[dependencies]
+rand = "0.8.3"
+serde = "1.0.123"
+bincode = "1.3.1"
+cmdr = "0.3.12"
+tokio = { version = "~0.2.22", features = ["full"] }
+qp2p = "0.9.13"
+log = "0.4.14"
+env_logger = "0.8.2"
+anyhow = "1.0.38"
+bytes = "1.0.1"
+
+# [profile.test]
+# opt-level = 3
+# lto = "fat"
+# incremental = false
