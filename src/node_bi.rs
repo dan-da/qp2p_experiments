@@ -8,7 +8,6 @@ use qp2p::{Config, Message, QuicP2p};
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 
-
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let args: Vec<String> = env::args().collect();

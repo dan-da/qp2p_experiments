@@ -9,25 +9,44 @@ use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 //use std::time::Duration;
 //use std::thread;
-use log::info;
 use env_logger;
-
+use log::info;
+use std::io::Write;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    env_logger::init();
+    env_logger::builder()
+        .format(|buf, record| {
+            writeln!(
+                buf,
+                "{} [{}:{}] {}",
+                record.level(),
+                record.file().unwrap_or_default(),
+                record.line().unwrap_or_default(),
+                record.args()
+            )
+        })
+        .init();
     let args: Vec<String> = env::args().collect();
 
-    let genesis = if args.len() > 1 && &args[1][..] == "create" { true } else { false };
+    let genesis = if args.len() > 1 && &args[1][..] == "create" {
+        true
+    } else {
+        false
+    };
 
-    let myport = if genesis {10000} else{10001};
-    let peer: SocketAddr = if genesis { "127.0.0.1:10001".parse()? } else{ "127.0.0.1:10000".parse()? };
+    let myport = if genesis { 10000 } else { 10001 };
+    let peer: SocketAddr = if genesis {
+        "127.0.0.1:10001".parse()?
+    } else {
+        "127.0.0.1:10000".parse()?
+    };
 
     // We use a fixed port for receiving.
     let qp2p_recv = QuicP2p::with_config(
         Some(Config {
             ip: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
-            port: Some( myport ),
+            port: Some(myport),
             ..Default::default()
         }),
         &vec![],
@@ -38,7 +57,7 @@ async fn main() -> Result<(), Error> {
     let qp2p_send = QuicP2p::with_config(
         Some(Config {
             ip: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
-            port: Some( 0 ),
+            port: Some(0),
             ..Default::default()
         }),
         &vec![],
@@ -53,10 +72,16 @@ async fn main() -> Result<(), Error> {
     }
 }
 
-async fn listen_for_network_msgs(qp2p_recv: &QuicP2p, qp2p_send: &QuicP2p, peer: &SocketAddr, mut cnt: usize) -> Result<(), Error> {
-
+async fn listen_for_network_msgs(
+    qp2p_recv: &QuicP2p,
+    qp2p_send: &QuicP2p,
+    peer: &SocketAddr,
+    mut cnt: usize,
+) -> Result<(), Error> {
     let endpoint_recv = qp2p_recv.new_endpoint()?;
     let socket_addr = endpoint_recv.socket_addr().await?;
+    #[allow(unused)]
+    let mut conn: qp2p::Connection;
 
     let mut conns = endpoint_recv.listen();
     println!("Listening for messages on {}", socket_addr);
@@ -68,7 +93,6 @@ async fn listen_for_network_msgs(qp2p_recv: &QuicP2p, qp2p_send: &QuicP2p, peer:
         // None before any message is received for this connection, at which
         // point communication halts between the peers.
         while let Some(msg) = msgs.next().await {
-
             let bytes = msg.get_message_data();
             let msg_str = std::str::from_utf8(&bytes[..])
                 .map_err(|err| anyhow!("Bytes received cannot read as UTF8 string: {}", err))?;
@@ -81,9 +105,9 @@ async fn listen_for_network_msgs(qp2p_recv: &QuicP2p, qp2p_send: &QuicP2p, peer:
             }
             cnt = intval + 1;
 
-//          thread::sleep(Duration::from_millis(500));
+            //          thread::sleep(Duration::from_millis(500));
 
-            send(qp2p_send, peer, cnt).await?;
+            conn = send(qp2p_send, peer, cnt).await?;
         }
         println!("done with msgs.  cnt = {}", cnt);
     }
@@ -92,13 +116,12 @@ async fn listen_for_network_msgs(qp2p_recv: &QuicP2p, qp2p_send: &QuicP2p, peer:
     Ok(())
 }
 
-async fn send(qp2p: &QuicP2p, peer: &SocketAddr, cnt: usize) -> Result<(), Error> {
+async fn send(qp2p: &QuicP2p, peer: &SocketAddr, cnt: usize) -> Result<qp2p::Connection, Error> {
     let input = format!("{}", cnt);
     let endpoint2 = qp2p.new_endpoint()?;
     let (conn, _) = endpoint2.connect_to(peer).await?;
     conn.send_uni(Bytes::from(input.clone())).await?;
-    conn.close();
 
     println!("Sent message: {} to: {}", input, peer);
-    Ok(())
+    Ok(conn)
 }
