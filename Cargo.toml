@@ -10,16 +10,20 @@ publish = false
 
 
 [[bin]]
-name = "node_uni"
-path = "src/node_uni.rs"
+name = "multiple_connections"
+path = "src/multiple_connections.rs"
 
 [[bin]]
-name = "node_uni_alt"
-path = "src/node_uni_alt.rs"
+name = "node"
+path = "src/node.rs"
 
-[[bin]]
-name = "node_bi"
-path = "src/node_bi.rs"
+#[[bin]]
+#name = "node_uni_alt"
+#path = "src/node_uni_alt.rs"
+
+#[[bin]]
+#name = "node_bi"
+#path = "src/node_bi.rs"
 
 
 [dependencies]
@@ -28,7 +32,7 @@ serde = "1.0.123"
 bincode = "1.3.1"
 cmdr = "0.3.12"
 tokio = { version = "~0.2.22", features = ["full"] }
-qp2p = "0.9.13"
+qp2p = {git = "https://github.com/lionel1704/qp2p.git", branch="refactor-api"}
 log = "0.4.14"
 env_logger = "0.8.2"
 anyhow = "1.0.38"
